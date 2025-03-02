@@ -63,12 +63,12 @@ try {
     $updateRecipient->execute();
 
 // Log transaction for sender
-$logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Transfer', 'Completed', ?, NOW(), ?)");
+$logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Sent', 'Completed', ?, NOW(), ?)");
 $logSenderTransaction->bind_param("di", $amount, $wallet_id);
 $logSenderTransaction->execute();
 
 // Log transaction for recipient
-$logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Transfer', 'Completed', ?, NOW(), ?)");
+$logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Recieve', 'Completed', ?, NOW(), ?)");
 $logRecipientTransaction->bind_param("di", $amount, $recipient_wallet_id);
 $logRecipientTransaction->execute();
 
