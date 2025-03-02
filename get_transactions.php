@@ -15,27 +15,17 @@ if (!isset($data['user_id'])) {
 
 $user_id = $data['user_id'];
 
-// Fetch all wallets belonging to the user
-$walletQuery = $conn->prepare("SELECT wallet_id FROM wallet WHERE user_id = ?");
-$walletQuery->bind_param("i", $user_id);
-$walletQuery->execute();
-$walletResult = $walletQuery->get_result();
+// Fetch transactions along with currency type
+$query = $conn->prepare("
+    SELECT t.transaction_id, t.transaction_type, t.status, t.amount, t.timestamp, c.currency_type 
+    FROM transactions t
+    JOIN wallet w ON t.wallet_id = w.wallet_id
+    LEFT JOIN currency c ON t.wallet_id = c.wallet_id  -- FIX: Left join to ensure all transactions appear
+    WHERE w.user_id = ?
+    AND t.transaction_type IN ('Sent', 'Receive', 'Deposit')
+");
 
-$wallet_ids = [];
-while ($row = $walletResult->fetch_assoc()) {
-    $wallet_ids[] = $row['wallet_id'];
-}
-
-if (empty($wallet_ids)) {
-    echo json_encode(["status" => "error", "message" => "No wallets found for this user"]);
-    exit();
-}
-
-// Fetch all transactions for the user's wallets
-$wallet_ids_placeholder = implode(',', array_fill(0, count($wallet_ids), '?'));
-$query = $conn->prepare("SELECT transaction_id, transaction_type, status, amount, timestamp FROM transactions WHERE wallet_id IN ($wallet_ids_placeholder)");
-
-$query->bind_param(str_repeat('i', count($wallet_ids)), ...$wallet_ids);
+$query->bind_param("i", $user_id);
 $query->execute();
 $result = $query->get_result();
 
@@ -44,7 +34,11 @@ while ($row = $result->fetch_assoc()) {
     $transactions[] = $row;
 }
 
-echo json_encode(["status" => "success", "transactions" => $transactions]);
+if (empty($transactions)) {
+    echo json_encode(["status" => "error", "message" => "No transactions found"]);
+} else {
+    echo json_encode(["status" => "success", "transactions" => $transactions]);
+}
 
 $query->close();
 $conn->close();
