@@ -62,15 +62,16 @@ try {
     $updateRecipient->bind_param("di", $amount, $recipient_wallet_id);
     $updateRecipient->execute();
 
-    // Log transaction for sender
-    $logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Send', 'Completed', ?, NOW(), ?)");
-    $logSenderTransaction->bind_param("di", $amount, $wallet_id);
-    $logSenderTransaction->execute();
+// Log transaction for sender
+$logSenderTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Transfer', 'Completed', ?, NOW(), ?)");
+$logSenderTransaction->bind_param("di", $amount, $wallet_id);
+$logSenderTransaction->execute();
 
-    // Log transaction for recipient
-    $logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Receive', 'Completed', ?, NOW(), ?)");
-    $logRecipientTransaction->bind_param("di", $amount, $recipient_wallet_id);
-    $logRecipientTransaction->execute();
+// Log transaction for recipient
+$logRecipientTransaction = $conn->prepare("INSERT INTO transactions (transaction_type, status, amount, timestamp, wallet_id) VALUES ('Transfer', 'Completed', ?, NOW(), ?)");
+$logRecipientTransaction->bind_param("di", $amount, $recipient_wallet_id);
+$logRecipientTransaction->execute();
+
 
     // Commit transaction
     $conn->commit();
